@@ -1,0 +1,10 @@
+services:
+  app:
+    container_name: tts-be
+    build:
+      context: .
+    stdin_open: true # Keep the container alive for debugging
+    tty: true # Allocate a pseudo-TTY for interactive usage
+    volumes:
+      - .:/app # Mount the current directory to the container for development
+    working_dir: /app # Set the working directory inside the container
