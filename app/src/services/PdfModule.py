@@ -1,9 +1,24 @@
 from PyPDF2 import PdfReader, PdfWriter
 import os
 import shutil
+import re
 from services.FilesModule import FilesModule
 
 class PdfModule:
+    def getSaveFileName(self, page_text, pageCount=""):
+        receiptMatch = re.search(r"Voucher No\.: (\S+)", page_text)
+        clientMatch = re.search(r"RECEIVED FROM: (.+)", page_text)
+
+        receiptNumber = receiptMatch.group(1) if receiptMatch else "NoReceiptNumber"
+        clientName = clientMatch.group(1).strip().replace("/", "_").replace(" ", "_") if clientMatch else "NoClientName"
+
+        nameString = f"{receiptNumber} {clientName}";
+        if ((receiptNumber == "NoReceiptNumber" or clientName == "NoClientName") and len(pageCount)):
+            nameString += f" at {pageCount}";
+
+
+        return nameString;
+
     def split_pdf(self, file_path, output_dir):
         if (not len(file_path)):
             return 0;
@@ -16,9 +31,16 @@ class PdfModule:
 
         result = 0;
         for i, page in enumerate(reader.pages):
+            pageText = page.extract_text()
+            if (not len(pageText)):
+                pass
+
+            pageCount = f"page_{i+1}";
+            saveFileName = self.getSaveFileName(pageText, pageCount);
+
             writer = PdfWriter()
             writer.add_page(page)
-            output_pdf_path = os.path.join(output_dir, f"page_{i+1}.pdf")
+            output_pdf_path = os.path.join(output_dir, f"{saveFileName}.pdf")
             with open(output_pdf_path, "wb") as output_file:
                 writer.write(output_file)
                 print(f"Saved: {output_pdf_path}")
