@@ -1,34 +1,33 @@
 from PyPDF2 import PdfReader, PdfWriter
-import os
-import shutil
-import re
-from datetime import datetime
 from services.FilesModule import FilesModule
 
 class PdfModule:
-    def getSaveFileName(self, page_text, pageCount=""):
-        receiptMatch = re.search(r"Voucher No\.: (\S+)", page_text)
-        clientMatch = re.search(r"RECEIVED FROM: (.+)", page_text)
+    filesModule = None;
 
-        receiptNumber = receiptMatch.group(1) if receiptMatch else "NoReceiptNumber"
-        clientName = clientMatch.group(1).strip() if clientMatch else "NoClientName"
+    def __init__(self):
+        self.filesModule = FilesModule();
 
-        nameString = f"{receiptNumber} {clientName}";
-        if ((receiptNumber == "NoReceiptNumber" or clientName == "NoClientName") and len(pageCount)):
-            nameString += f" at {pageCount}";
+    def writePdf(self, outputPdfPath, writer):
+        try:
+            with open(outputPdfPath, "wb") as outputFile:
+                writer.write(outputFile)
+                print(f"Saved: {outputPdfPath}")
 
+                return 1;
+        except Exception as e:
+            print(f"Failed to save {outputPdfPath} with Errors: {e}");
 
-        return nameString;
+            return 0
 
-    def splitPdf(self, file_path, output_dir):
-        if (not len(file_path)):
+    def splitPdf(self, filePath, outputDir):
+        if (not len(filePath)):
             return 0;
 
-        reader = PdfReader(file_path)
+        reader = PdfReader(filePath)
         if (not len(reader.pages)):
             return 0;
 
-        os.makedirs(output_dir, exist_ok=True)
+        self.filesModule.createOutputDir(outputDir);
 
         result = 0;
         for i, page in enumerate(reader.pages):
@@ -37,36 +36,12 @@ class PdfModule:
                 pass
 
             pageCount = f"page_{i+1}";
-            saveFileName = self.getSaveFileName(pageText, pageCount);
+            saveFileName = self.filesModule.getSaveFileName(pageText, pageCount);
 
             writer = PdfWriter()
             writer.add_page(page)
-            output_pdf_path = os.path.join(output_dir, f"{saveFileName}.pdf")
-            with open(output_pdf_path, "wb") as output_file:
-                writer.write(output_file)
-                print(f"Saved: {output_pdf_path}")
-                result += 1;
+            outputPdfPath = self.filesModule.getOutputPdfPath(outputDir, saveFileName);
+
+            result += self.writePdf(outputPdfPath, writer);
 
         return result;
-
-    def processFiles(self):
-        queued_files = os.listdir(FilesModule.QUEUED_DIR)
-        
-        for fileName in queued_files:
-            queued_path = os.path.join(FilesModule.QUEUED_DIR, fileName)
-            doing_path = os.path.join(FilesModule.DOING_DIR, fileName)
-            shutil.move(queued_path, doing_path)
-            print(f"Moved to doing: {doing_path}")
-
-            currentTime = datetime.now();
-            formattedTime = currentTime.strftime("%Y-%m-%d %H:%M:%S")
-            outputDir = os.path.join(FilesModule.DONE_DIR, formattedTime)
-            result = self.splitPdf(doing_path, outputDir);
-            if (result):
-                print(f"Successfully processed {result} files");
-                print("Moving files to Done.")
-                shutil.move(doing_path, outputDir)
-                print(f"Moved to done: {outputDir}")
-            else:
-                print("The process failed. The script stays active.");
-
