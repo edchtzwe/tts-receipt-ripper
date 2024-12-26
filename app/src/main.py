@@ -5,7 +5,7 @@ class Main:
         print("Ready to process...");
         pdfUnit = PdfModule();
         while True:
-            pdfUnit.process_files();
+            pdfUnit.processFiles();
 
 app = Main();
 app.execute();

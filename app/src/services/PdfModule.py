@@ -2,6 +2,7 @@ from PyPDF2 import PdfReader, PdfWriter
 import os
 import shutil
 import re
+from datetime import datetime
 from services.FilesModule import FilesModule
 
 class PdfModule:
@@ -10,7 +11,7 @@ class PdfModule:
         clientMatch = re.search(r"RECEIVED FROM: (.+)", page_text)
 
         receiptNumber = receiptMatch.group(1) if receiptMatch else "NoReceiptNumber"
-        clientName = clientMatch.group(1).strip().replace("/", "_").replace(" ", "_") if clientMatch else "NoClientName"
+        clientName = clientMatch.group(1).strip() if clientMatch else "NoClientName"
 
         nameString = f"{receiptNumber} {clientName}";
         if ((receiptNumber == "NoReceiptNumber" or clientName == "NoClientName") and len(pageCount)):
@@ -19,7 +20,7 @@ class PdfModule:
 
         return nameString;
 
-    def split_pdf(self, file_path, output_dir):
+    def splitPdf(self, file_path, output_dir):
         if (not len(file_path)):
             return 0;
 
@@ -48,26 +49,24 @@ class PdfModule:
 
         return result;
 
-    def process_files(self):
-        while True:
-            queued_files = os.listdir(FilesModule.QUEUED_DIR)
-            
-            for file_name in queued_files:
-                # Move file to the 'doing' folder
-                queued_path = os.path.join(FilesModule.QUEUED_DIR, file_name)
-                doing_path = os.path.join(FilesModule.DOING_DIR, file_name)
-                shutil.move(queued_path, doing_path)
-                print(f"Moved to doing: {doing_path}")
+    def processFiles(self):
+        queued_files = os.listdir(FilesModule.QUEUED_DIR)
+        
+        for fileName in queued_files:
+            queued_path = os.path.join(FilesModule.QUEUED_DIR, fileName)
+            doing_path = os.path.join(FilesModule.DOING_DIR, fileName)
+            shutil.move(queued_path, doing_path)
+            print(f"Moved to doing: {doing_path}")
 
-                # Process the file
-                output_dir = os.path.join(FilesModule.DONE_DIR, os.path.splitext(file_name)[0])
-                result = self.split_pdf(doing_path, output_dir);
-                if (result):
-                    print(f"Successfully processed {result} files");
-                    print("Moving files to Done.")
-                    done_path = os.path.join(FilesModule.DONE_DIR, file_name)
-                    shutil.move(doing_path, done_path)
-                    print(f"Moved to done: {done_path}")
-                else:
-                    print("The process failed. The script stays active.");
+            currentTime = datetime.now();
+            formattedTime = currentTime.strftime("%Y-%m-%d %H:%M:%S")
+            outputDir = os.path.join(FilesModule.DONE_DIR, formattedTime)
+            result = self.splitPdf(doing_path, outputDir);
+            if (result):
+                print(f"Successfully processed {result} files");
+                print("Moving files to Done.")
+                shutil.move(doing_path, outputDir)
+                print(f"Moved to done: {outputDir}")
+            else:
+                print("The process failed. The script stays active.");
 
