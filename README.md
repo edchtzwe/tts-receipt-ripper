@@ -1,5 +1,12 @@
 # TTS Receipt Ripper
 
+## Installation
+### Windows
+- You will need to Download the official Python3 package from https://www.python.org/downloads/
+- Follow the steps and make sure you choose to register to PATH
+- Go to the project folder where you can see main.py and start a command console
+- Start the app with ```python3 main.py```
+
 ## How to use:
 1. Run `main.exe`.
 2. Three folders will be created:
