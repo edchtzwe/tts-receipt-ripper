@@ -41,8 +41,13 @@ class Main:
         print("The queue is now clear... Standing by...");
         time.sleep(3);
 
-    def execute(self):
+    def execute(self, debug=False):
         print("The receipt ripper is ready. Press Ctrl + C to terminate...");
+        if (debug is True):
+            print(FilesModule.BASE_DIR)
+            print(FilesModule.QUEUED_DIR)
+            print(FilesModule.DOING_DIR)
+            print(FilesModule.DONE_DIR)
 
         while True:
             self.processFiles(os.listdir(FilesModule.QUEUED_DIR));

@@ -3,20 +3,23 @@ from zoneinfo import ZoneInfo
 from datetime import datetime
 import re;
 import shutil;
+from pathlib import Path
 
 class FilesModule:
-    BASE_DIR = "/app/app/data"
-    QUEUED_DIR = f"{BASE_DIR}/queued"
-    DOING_DIR = f"{BASE_DIR}/doing"
-    DONE_DIR = f"{BASE_DIR}/done"
+    BASE_DIR = Path(__file__).resolve().parent.parent.parent / "data"
+    QUEUED_DIR = BASE_DIR / "queued"
+    DOING_DIR = BASE_DIR / "doing"
+    DONE_DIR = BASE_DIR / "done"
     LOCALTIMEZONE = None
+    AUSTRALIA = "Australia/Melbourne"
+    MALAYSIA = "Asia/Kuala_Lumpur"
 
     def __init__(self):
         # Ensure required directories exist
         os.makedirs(self.QUEUED_DIR, exist_ok=True)
         os.makedirs(self.DOING_DIR, exist_ok=True)
         os.makedirs(self.DONE_DIR, exist_ok=True)
-        self.LOCALTIMEZONE = ZoneInfo("Australia/Melbourne")
+        self.LOCALTIMEZONE = ZoneInfo(self.MALAYSIA)
 
     def print_directories(self):
         print("Directories:")
