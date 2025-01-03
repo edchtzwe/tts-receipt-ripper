@@ -27,12 +27,25 @@ class FilesModule:
         print(f"DOING_DIR: {self.DOING_DIR}")
         print(f"DONE_DIR: {self.DONE_DIR}")
 
-    def getSaveFileName(self, page_text, pageCount=""):
-        receiptMatch = re.search(r"Voucher No\.: (\S+)", page_text)
-        clientMatch = re.search(r"RECEIVED FROM: (.+)", page_text)
+    def getSaveFileName(self, page_text, pageCount="", debug=False):
+        receiptMatch = re.search(r"Voucher No\.\s*:?(\s*\S+)", page_text)
+        clientMatch = re.search(r"RECEIVED FROM\s*:\s*(.+)", page_text)
+
+        if (debug is True):
+            print("Parsing this page text...");
+            print(page_text)
+            print("The matches...")
+            print(receiptMatch)
+            print(clientMatch)
 
         receiptNumber = receiptMatch.group(1) if receiptMatch else "NoReceiptNumber"
         clientName = clientMatch.group(1).strip() if clientMatch else "NoClientName"
+
+        if ":" in receiptNumber:
+            receiptNumber = receiptNumber.replace(":", "")
+
+        if ":" in clientName:
+            clientName = clientName.replace(":", "")
 
         nameString = f"{receiptNumber} {clientName}";
         if ((receiptNumber == "NoReceiptNumber" or clientName == "NoClientName") and len(pageCount)):
@@ -55,7 +68,7 @@ class FilesModule:
 
     def getOutputDir(self):
         currentTime = datetime.now(self.LOCALTIMEZONE);
-        formattedTime = currentTime.strftime("%Y-%m-%d %H:%M:%S")
+        formattedTime = currentTime.strftime("%Y-%m-%d %H %M %S")
 
         return os.path.join(FilesModule.DONE_DIR, formattedTime)
 
